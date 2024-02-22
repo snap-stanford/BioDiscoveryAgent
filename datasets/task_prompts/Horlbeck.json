@@ -1,0 +1,4 @@
+{
+  "Task": "Identify gene combinations that exhibit interactin effects (synergistic or buffering) on cell fitness in K562 cells upon combinatorial knockdown. An interaction effect should be determined by the deviation between the observed cell fitness and the expected fitness, which is calculated from the average impact of knocking down each gene individually.",
+  "Measurement": "The difference between the actual change in cell fitness and the expected additive effect from the individual knockdowns of the two genes."
+}
