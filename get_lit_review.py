@@ -229,7 +229,15 @@ def get_lit_review(prompt, model, max_number):
     while True:
         query = what_to_query(prompt, model)
         print(query)
-        papers = list(pubmed.query(query, max_results=max_number))
+        papers = list(pubmed.query(query, max_results=max_number)) 
+        while True:
+            try:
+                papers = list(pubmed.query(query, max_results=max_number))
+                break
+            except:
+                print("Rate limit reached. Waiting for 10 seconds")
+                time.sleep(10)
+            
         
         for i, paper in enumerate(papers):
             lit_review += '\n' + paper.title + '\n'

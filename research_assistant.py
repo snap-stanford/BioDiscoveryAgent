@@ -7,11 +7,29 @@ import datetime
 import argparse
 import shutil
 import selectors
-from tools import ALL_TOOLS, agent_loop
-from screen import read_task_prompt
+from tools import agent_loop
 import tools
-#from LLM import complete_text_openai, complete_text_claude
 
+
+def read_task_prompt(json_file_path):
+    """
+    Reads the task prompt from a JSON file and returns the task description and measurement.
+
+    Parameters:
+    - json_file_path (str): Path to the JSON file.
+
+    Returns:
+    - task_description (str): Description of the task.
+    - measurement (str): Measurement associated with the task.
+    """
+
+    with open(json_file_path, 'r') as f:
+        prompt_data = json.load(f)
+
+    task_description = prompt_data['Task']
+    measurement = prompt_data['Measurement']
+
+    return task_description, measurement
 
 initial_prompt = """You are a scientist working on problems in drug discovery.
 
@@ -74,17 +92,14 @@ if __name__ == "__main__":
     parser.add_argument("--task", type=str, default="perturb-genes-brief-Horlbeck",
                         help="task name")
     parser.add_argument("--log_dir", type=str, default="logs", help="script")
-    parser.add_argument("--folder_name", type=str, default="temp", help="temp folder name")
 
     parser.add_argument("--run_name", type=str, default="exp", help="script "
                                                                      "name")
     parser.add_argument("--data_name", type=str, default='Horlbeck',
                         help="dataset name")
     parser.add_argument("--steps", type=int, default=6, help="number of steps")
-    parser.add_argument("--device", type=int, default=0, help="device id")
     parser.add_argument("--model", type=str, default='claude-v1',
                                                 help="LLM choice")
-    parser.add_argument("--python", type=str, default="/lfs/turing2/0/qhwang/miniconda3/envs/llm/bin/python", help="python command")
     parser.add_argument("--continue_research", type=str, default=None, help="continue from a previous run")
     parser.add_argument("--interactive_interval", type=int, default=None, help="interactive interval")
     parser.add_argument("--enable_help", type=bool, default=False, help="enable help")
@@ -93,71 +108,19 @@ if __name__ == "__main__":
                                                                  "genes to sample per round")
     parser.add_argument("--manual_prepare", type=bool, default=False, help="use gpt4")
     parser.add_argument("--prompt_tries", type=int, default=20)
-    parser.add_argument("--critique", type=bool, default=False, help="critique")
-    parser.add_argument("--gene_search", type=bool, default=False, help="gene_search")
+    parser.add_argument("--critique", type=bool, default=False, help="AI critic")
+    parser.add_argument("--gene_search", type=bool, default=False, help="gene search")
+    parser.add_argument("--gene_search_diverse", type=bool, default=False, help="gene search using diversity mode instead of similarity mode")
     parser.add_argument("--lit_review", type=bool, default=False, help="perform literature review")
-    parser.add_argument("--combinatorial", type=bool, default=True, help="combinatorial")
+    parser.add_argument("--combinatorial", type=bool, default=False, help="combinatorial")
     
     args = parser.parse_args()
-
-    tools.DEVICE = args.device
-    tools.PYTHON = args.python
-
-    print("DEVICE:", tools.DEVICE)
-    print("PYTHON:", tools.PYTHON)
-
-
-# , 'Edit Script (Direct)''Work On Subtask',
-    all_tools = ['Reflection', 'Arxiv Search']
-    #all_tools = ['Reflection', 'Read File',]
-    #all_tools = [ 'Copy File', 'List Files', 'Read File', 'Reflection',
-    # 'Final Answer','Inspect Script Lines', 'Edit Script (AI)', 'Undo Edit Script', 'Execute Script']
-    if args.enable_help: 
-        all_tools.append('Request Help')
-
-    low_level_tools = all_tools
-    high_level_tools = all_tools
-
-    # research_problem = "Find the part of code that customizes the model in train.py"
-    # folder_name = "add_metric"
 
     # Task and measurement information
     task_description, measurement = read_task_prompt(
                             './datasets/task_prompts/'+args.data_name+'.json')
 
-
-    # research_problem = "Create a eval.py file to evaluate the model trained with train.py over VQA-RAD dataset. The code for VQA-RAD dataset is in dataset_RAD.py."
-    # folder_name = "add_metric"
-    if args.task == "debug":
-        research_problem = "Given a training script on a dataset train.py, improve upon the current performance of the model with a simple change."
-        benchmark_name = "cifar10_training"
-
-    elif args.task == "cifar10-training":
-        research_problem = "Given a training script on a dataset train.py, improve upon the current model performance (trained with current hyperparmeters in train.py) for more than 10%. The training epochs should be within 10 to save time."
-        benchmark_name = "cifar10_training"
-
-    elif args.task == "perturb-genes":
-        research_problem = "You are running a series of experiments to " \
-                           "identify genes whose perturbation would " \
-                           "most impact Interferon-gamma production. Given a " \
-                           "list of experimental outcomes following the perturbation of some set of genes, " \
-                           "the goal is to predict a set of new genes " \
-                           "that would lead to extremely positive or " \
-                           "extremely negative values of this score."
-        benchmark_name = "perturb-genes"
-
-        instructions = "\n Based on these results and your knowledge of biology, " \
-                       "predict the next {} genes I should experimentally " \
-                       "test, i.e. genes that show a strong log " \
-                       "fold change in INF-gamma (whether strongly positive or strongly negative) " \
-                       "upon being knocked out. IFN-gamma is a cytokine produced " \
-                       "by CD4+ and CD8+ T cells that induces additional T " \
-                       "cells. It might be worth exploring co-essential " \
-                       "genes. Use HGNC gene naming convention.  " \
-                       "DO PREDICT GENES THAT HAVE ALREADY BEEN TESTED " \
-                       "".format(args.num_genes)
-
-    elif args.task == "perturb-genes-brief":
+    if args.task == "perturb-genes-brief":
         research_problem = "I'm planning to run a genome-wide CRISPR screen " \
                            "to {}. There are 18,939 possible  genes to perturb and I can only " \
                            "perturb {} genes at a time. For each " \
@@ -209,98 +172,9 @@ if __name__ == "__main__":
                        "BEEN TESTED. Hint: genetic interactions are often found between" \
                        "functionally related genes".format(args.num_genes)
 
-    elif args.task == "speed-up":
-        research_problem = "Given a inference script inference.py, execute it to see the current generation speed per token and then try to improve it with accelerate library. The script is run on a single A100 GPU. Before you give the final answer, please ask yourself if there is any other way to improve the speed."
-        benchmark_name = "speed_up"
-
-    elif args.task == "add-metric":
-        research_problem = "Create a eval.py file to evaluate the model trained with train.py over VQA-RAD dataset. The code for VQA-RAD dataset is in dataset_RAD.py."
-        benchmark_name = "add_metric"
-
-    elif args.task == "literature-review":
-        research_problem = """Create a literature_review.py file to create a large language model(LLM) based AI system for the task of literature review. The LLM can be accessed using anthropic API with API key in claude_api_key.txt. Use it as in claude_example.py.
-        Given ANY query on a research topic, e.g. Language model hallucination detection, the system should 
-            - Call arxiv API (with reference in arxiv_API_reference.txt) with appropriate queries to get a list of related papers.
-            - Use the LLM to summarize these papers and generate a report. The report should include the following information: 1) the list of papers; 2) the summary of each paper; 3) the conclusion of the literature review."""
-        benchmark_name = "literature_review"
-
-    elif args.task == "fix-literature-review":
-        research_problem = """Fix literature_review.py file to create a large language model(LLM) based AI system for the task of literature review. The LLM can be accesed using anthropic API with API key in claude_api_key.txt. Use it as in claude_example.py.
-        Given ANY query on a research topic, e.g. Language model hallucination detection, the system should 
-            - Call arxiv API (with reference in arxiv_API_reference.txt) with appropriate queries to get a list of related papers.
-            - Use the LLM to summarize these papers and generate a report. The report should include the following information: 1) the list of papers; 2) the summary of each paper; 3) the conclusion of the literature review."""
-        benchmark_name = "literature_review"
-    elif args.task == "bibtex-generation":
-        research_problem = """Create a bibtex_generation.py file that contains an LLM based AI system for the task of bibtex generation. The LLM should be accessed through API as in LLM_example.py.
-        Given ANY paragraph, e.g. "We use the method proposed in PromptTuning to train the Transformer model...", the system should 
-            - Use the LLM to find all phrases and claims in the paragraph that require citations, e.g. PromptTuning and Transformer
-            - Use google scholar API (with reference in google_scholar_API_reference.txt) with appropriate queries to find proper references and get the bibtex entries for the papers.
-            - Finally, use LLM to generate the original paragraph with bibtex entries, e.g. "We use the method proposed in \cite{lester-etal-2021-power} to train the Transformer \cite{...} model..., as well as the bibtext entries for the referred papers.
-            """
-        benchmark_name = "bibtex-generation"
-
     else:
         raise ValueError("task not supported")
 
-
-
-    #######################################################
-    #                                                     # 
-    #            Prepare Environment                      # 
-    #                                                     #
-    #######################################################
-
-    # default workspace folder name
-    folder_name = args.folder_name
-    current_history = None
-    if args.manual_prepare:
-        print(f"Please prepare the folder {folder_name} manually and then press enter to continue.")
-        input()
-
-    elif args.continue_research is None:
-        
-        # remove the folder if it exists
-        if os.path.exists(folder_name):
-            shutil.rmtree(folder_name)
-
-        os.mkdir(folder_name)
-
-        # copy the benchmarks folder to folder_name
-        if os.path.exists(os.path.join("benchmarks", benchmark_name)):
-            shutil.copytree(os.path.join("benchmarks", benchmark_name), folder_name)
-
-        # init research_log.log
-        with open(os.path.join(folder_name, "research_log.log"), "w") as f:
-            f.write("")
-
-        # init python files in the folder
-        for file_name in os.listdir(folder_name):
-            if file_name.endswith(".bak"):
-                os.rename(os.path.join(folder_name, file_name), os.path.join(folder_name, file_name[:-4]))
-        
-        # init backup folder and remove all content if it exists
-        if os.path.exists(os.path.join(folder_name, "backup")):
-            shutil.rmtree(os.path.join(folder_name, "backup"))
-        os.mkdir(os.path.join(folder_name, "backup"))
-
-    else:
-        # restore backup folder
-        if os.path.exists(os.path.join(args.continue_research, "folder_backup")):
-            folder_name = folder_name + "_continued"
-            shutil.copytree(os.path.join(args.continue_research, "folder_backup"), folder_name)
-
-        # restore current_history.json
-        with open(os.path.join(args.continue_research, "current_history.json") , "r") as f:
-            current_history = json.load(f)
-        
-        # restore research_log.log
-        shutil.copyfile(os.path.join(args.continue_research, "research_log.log"), os.path.join(folder_name, "research_log.log"))
-
-        # restore python files in the folder
-        for file_name in os.listdir(folder_name):
-            if file_name.endswith(".bak"):
-                os.rename(os.path.join(args.continue_research, file_name[:-4]), os.path.join(folder_name, file_name[:-4]))
-        
 
 
     #######################################################
@@ -315,21 +189,13 @@ if __name__ == "__main__":
     if args.combinatorial:
         initial_prompt = initial_prompt_pairs
             
-    if current_history is None:
-        current_history = {
-            "tool_names" : high_level_tools,
-            "low_level_tools": low_level_tools,
-            "high_level_tools": high_level_tools,
-            "research_problem" : research_problem,
-            "initial_prompt": initial_prompt,
-            "actions" : [],
-            "observations" : [],
-            "folder_name": folder_name,
-            "instructions": instructions
-        }
-
-    # execute_script("script_name:literature_review.py", "no", "literature_review")
-    # exit()
+    current_history = {
+        "research_problem" : research_problem,
+        "initial_prompt": initial_prompt,
+        "actions" : [],
+        "observations" : [],
+        "instructions": instructions
+    }
 
     
     log_dir = os.path.join(args.log_dir +'_'+ args.data_name, args.run_name)
