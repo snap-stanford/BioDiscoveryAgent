@@ -1,14 +1,7 @@
 import os
-import anthropic
 import json
-import subprocess
-import re
-import datetime
 import argparse
-import shutil
-import selectors
 from tools import agent_loop
-import tools
 
 
 def read_task_prompt(json_file_path):
@@ -58,21 +51,7 @@ Do not include any genes from this prompt (since they're already tested).
 
 """
 
-## Norman
-initial_prompt_pairs_norman = """You are a scientist working on problems in drug discovery.
-
-Research Problem: {research_problem}
-
-Always respond in this format exactly:
-
-1. Research Plan: The full high level research plan, with current status and reasoning behind each proposed approach. It should be at most 5 sentences.
-2. Solution: Propose a list of predicted pairs of genes to test separated by commas in this format: 1. <Gene name 1> + <Gene name 2>, 2. <Gene name 3> + <Gene name 4>, 3... 
-
-ONLY CHOOSE FROM this gene list ['AHR', 'ARID1A', 'ARRDC3', 'ATL1', 'BCORL1', 'BPGM', 'CBARP', 'CBFA2T3', 'CBL', 'CDKN1A', 'CDKN1B', 'CDKN1C', 'CEBPA', 'CEBPB', 'CEBPE', 'CELF2', 'CITED1', 'CKS1B', 'CLDN6', 'CNN1', 'CNNM4', 'COL1A1', 'COL2A1', 'CSRNP1', 'DLX2', 'DUSP9', 'EGR1', 'ELMSAN1', 'ETS2', 'FEV', 'FOSB', 'FOXA1', 'FOXA3', 'FOXF1', 'FOXL2', 'FOXL2NB', 'FOXO4', 'GLB1L2','HES7', 'HK2', 'HNF4A', 'HOXA13', 'HOXB9', 'HOXC13', 'IER5L', 'IGDCC3','IKZF3', 'IRF1', 'JUN', 'KIF18B', 'KLF1', 'LHX1', 'LYL1', 'MAML2','MAP2K3', 'MAP2K6', 'MAPK1', 'MEIS1', 'MIDN', 'NIT1', 'OSR2', 'POU3F2','PRDM1', 'PRTG', 'PTPN1', 'PTPN12', 'PTPN13', 'PTPN9', 'RHOXF2B','RP5-862P8.2', 'RREB1', 'S1PR2', 'SAMD1', 'SET', 'SGK1', 'SLC38A2','SLC4A1', 'SLC6A9', 'SNAI1', 'SPI1', 'TBX2', 'TBX3', 'TMSB4X', 'TP73','TSC22D1', 'UBASH3A', 'UBASH3B', 'ZBTB1', 'ZBTB10', 'ZBTB25', 'ZC3HAV1','ZNF318']
-
-"""
-
-## Horlbeck
+## Combination task: Horlbeck
 initial_prompt_pairs = """You are a scientist working on problems in drug discovery.
 
 Research Problem: {research_problem}
@@ -120,8 +99,8 @@ if __name__ == "__main__":
     task_description, measurement = read_task_prompt(
                             './datasets/task_prompts/'+args.data_name+'.json')
 
-    if args.task == "perturb-genes-brief":
-        research_problem = "I'm planning to run a genome-wide CRISPR screen " \
+    if args.task == "perturb-genes":
+        research_problem = "I'm planning to run a CRISPR screen " \
                            "to {}. There are 18,939 possible  genes to perturb and I can only " \
                            "perturb {} genes at a time. For each " \
                            "perturbation, I'm able to measure out {} which " \
@@ -129,7 +108,7 @@ if __name__ == "__main__":
                            "only do a few rounds of experimentation.".format(
                             task_description,  args.num_genes, measurement)
 
-        benchmark_name = "perturb-genes-brief"
+        benchmark_name = "perturb-genes"
 
         instructions = "\n Based on these results and " \
                            "prior knowledge of biology, make the best " \
@@ -139,32 +118,13 @@ if __name__ == "__main__":
                            "DO NOT PREDICT GENES THAT HAVE ALREADY BEEN TESTED"\
                            "".format(args.num_genes)
 
-    elif args.task == "perturb-genes-brief-NormanGI":
-        research_problem = "I'm planning to run a genome-wide CRISPR screen " \
-                           "to {}. There are 92 possible genes to perturb and I can only " \
-                           "perturb {} gene pairs at a time. For each " \
-                           "perturbation, I'm able to measure out {} which " \
-                           "will be referred to as the score. I can " \
-                           "only do a few rounds of experimentation.".format(
-                            task_description,  args.num_genes, measurement)
-
-        benchmark_name = "perturb-genes-brief"
-
-        instructions = "\n Based on these results and " \
-                           "prior knowledge of biology, make the best " \
-                       "possible prediction of the " \
-                           "first {} genes that I should test to maximize " \
-                           "the score. Use HGNC gene naming convention." \
-                           "DO NOT PREDICT GENES THAT HAVE ALREADY BEEN TESTED"\
-                           "".format(args.num_genes)
-
-    elif args.task == "perturb-genes-brief-Horlbeck":
+    elif args.task == "perturb-genes-Horlbeck":
         research_problem = "I am interested in {}. There are 450 genes from which pairs of " \
                             "genes must be chosen. I can only perturb {} gene pairs at a " \
                             "time. For each perturbation, I'm able to measure out {} which will " \
                             "be referred to as the score.".format(task_description, args.num_genes, measurement)
 
-        benchmark_name = "perturb-genes-brief"
+        benchmark_name = "perturb-genes"
 
         instructions = "\n Based on these results and using your prior knowledge of biology,"\
                        "can you suggest {} other combinations that may also show a synergistic" \

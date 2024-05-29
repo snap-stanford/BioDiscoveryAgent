@@ -1,19 +1,10 @@
 from LLM import complete_text, complete_text_claude
 import arxiv
 import scholarly
-from scholarly import ProxyGenerator
 from pymed import PubMed
-# pg = ProxyGenerator()
-# pg.FreeProxies()
-# scholarly.use_proxy(pg)
-
-import json
 from urllib import request
 from bs4 import BeautifulSoup
-from tqdm import tqdm
-from pprint import pprint
 
-# https://www.biorxiv.org/search/IFNG%20numresults%3A25%20sort%3Apublication-date%20direction%3Aascending
 DEFAULT_URL = {
     'biorxiv':
     'https://www.biorxiv.org/search/{}%20numresults%3A25%20sort%3Arelevance-rank'
@@ -201,22 +192,6 @@ def paperqa_search(query, max_papers, folder = '.', **kwargs):
     return answer
 
 def get_lit_review(prompt, model, max_number):
-    
-    # lit_review = ""
-    # while True:
-    #     query = what_to_query(prompt, model)
-    #     papers = biorxiv_search(query, max_number)
-        
-    #     for i, paper in enumerate(papers):
-    #         lit_review += str(i+1) + ". " + paper['title'] + '\n'
-    #         lit_review += paper['biorxiv_url'] + '\n'
-    #         prompt_for_summary = paper['title'] + '\n' +  paper['abstract'] + '\n' +  paper['full_text']
-    #         summarized_paper = understand_file(prompt_for_summary, "information that points to genes used for IFNG production, some potential pathways", model)
-    #         lit_review += summarized_paper + '\n \n'
-    #     if len(lit_review)>10:
-    #         break
-    
-    # return str(lit_review)
 
     lit_review = ""
     import time

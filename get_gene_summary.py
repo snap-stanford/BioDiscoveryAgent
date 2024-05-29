@@ -2,8 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import html2text
 import mygene
-import json
-import pickle
 mg = mygene.MyGeneInfo()
 from LLM import complete_text_claude
 import anthropic

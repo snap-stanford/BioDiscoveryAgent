@@ -1,9 +1,7 @@
 """ This file contains the code for calling all LLM APIs. """
 
 import os
-from functools import partial
 import tiktoken
-# from schema import TooLongPromptError, LLMError
 
 enc = tiktoken.get_encoding("cl100k_base")
 
