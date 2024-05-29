@@ -5,7 +5,7 @@ biological experiments. BioDiscoveryAgent designs genetic perturbation experimen
 using only an LLM (Claude v1) paired with a suite of tools (literature 
 search, gene search, AI critique).
 
-<img src="assets/icon.jpg" width="300">
+<img src="assets/icon.jpg" width="350">
 
 ## Installation
 
@@ -37,7 +37,7 @@ python research_assistant.py  --task perturb-genes-brief --model claude-1 --run_
 
 To preprocess your own dataset, please follow the instructions in the [preprocessing notebook](notebooks/Preprocessing.ipynb)
 
-### Preprint
+## Preprint
 
 Please cite our [preprint](http://arxiv.org/abs/2405.17631) if you use this code in your research:
 
