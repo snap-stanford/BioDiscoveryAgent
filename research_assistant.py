@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from tools import agent_loop
+from tools import GenePerturbAgent
 
 
 def read_task_prompt(json_file_path):
@@ -160,7 +160,9 @@ if __name__ == "__main__":
     
     log_dir = os.path.join(args.log_dir +'_'+ args.data_name, args.run_name)
     print("Log directory: ", log_dir)
-    agent_loop(current_history, args.steps, args.use_gpt4, log_dir, args)
+    experiment_agent = GenePerturbAgent(current_history, args.steps, args.use_gpt4, log_dir, args)
+    experiment_agent.run_experiment()
+    #agent_loop(current_history, args.steps, args.use_gpt4, log_dir, args)
 
 
 
