@@ -59,6 +59,19 @@ def complete_text_claude(prompt, stop_sequences=[anthropic.HUMAN_PROMPT], model=
         ai_prompt = kwargs["ai_prompt"]
         del kwargs["ai_prompt"]
     # model = "claude-2"
+    if model == "claude-3-5-sonnet-20240620":
+        messages = [
+            {'role': 'user', 'content': f"{anthropic.HUMAN_PROMPT} {prompt}"}
+        ]
+        rsp = anthropic_client.messages.create(
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens_to_sample
+        )
+        completion = rsp.content[0].text
+        if log_file is not None:
+            log_to_file(log_file, prompt, completion, model, max_tokens_to_sample)
+        return completion
     try:
         rsp = anthropic_client.completions.create(
             prompt=f"{anthropic.HUMAN_PROMPT} {prompt} {ai_prompt}",
