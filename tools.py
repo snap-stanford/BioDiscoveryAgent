@@ -179,6 +179,7 @@ class GenePerturbAgent(object):
             "================================Start=============================")
         self.write_log(self.current_history["initial_prompt"].format(
             research_problem=self.research_problem))
+        hits = None
 
         for self.curr_step in range(self.steps):
             if self.curr_step != 0:
@@ -204,20 +205,18 @@ class GenePerturbAgent(object):
             self.process_completion(prompt, self.gene_sampled, curr_sample,
                                     log_file)
 
-            if not self.args.critique:
-                continue
+            if self.args.critique:
+                critique_prompt = self.generate_critique_prompt(curr_sample, hits)
+                self.process_completion(critique_prompt, self.gene_sampled, curr_sample)
 
-            critique_prompt = self.generate_critique_prompt(curr_sample)
-            self.process_completion(critique_prompt, self.gene_sampled, curr_sample)
-
-    def generate_critique_prompt(self, curr_sample):
+    def generate_critique_prompt(self, curr_sample, hits):
         prompt_c = f"""You are a scientist working on problems in drug discovery.
 Research Problem: {self.research_problem}
 """
-        if self.curr_step != 0:
+        if hits is not None:
             prompt_c += (
-                f"\n All tested genes so far and their measured log fold change are: \n{self.ground_truth.drop(self.hits).to_string()}"
-                f"\n The results for the hits are: \n{self.ground_truth.loc[self.hits].to_string()}"
+                f"\n All tested genes so far and their measured log fold change are: \n{self.ground_truth.drop(hits).to_string()}"
+                f"\n The results for the hits are: \n{self.ground_truth.loc[hits].to_string()}"
             )
         prompt_c += (
             f"\n\nNow for the next round of experiment your students are planning on testing the following genes: \n{str(curr_sample[:self.args.num_genes])}"
