@@ -182,6 +182,7 @@ class GenePerturbAgent(object):
         hits = None
 
         for self.curr_step in range(self.steps):
+            gene_readout = None
             if self.curr_step != 0:
                 self.gene_sampled = list(np.load(os.path.join(self.log_dir,
                                                               f'sampled_genes_{self.curr_step}.npy')))
