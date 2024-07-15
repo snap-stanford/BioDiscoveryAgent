@@ -207,7 +207,7 @@ class GenePerturbAgent(object):
 
             if self.args.critique:
                 critique_prompt = self.generate_critique_prompt(curr_sample, hits)
-                self.process_completion(critique_prompt, self.gene_sampled, curr_sample)
+                self.process_completion(critique_prompt, self.gene_sampled, curr_sample, log_file)
 
     def generate_critique_prompt(self, curr_sample, hits):
         prompt_c = f"""You are a scientist working on problems in drug discovery.
