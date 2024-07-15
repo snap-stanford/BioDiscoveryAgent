@@ -206,16 +206,16 @@ class GenePerturbAgent(object):
                                     log_file)
 
             if self.args.critique:
-                critique_prompt = self.generate_critique_prompt(curr_sample, hits)
+                critique_prompt = self.generate_critique_prompt(curr_sample, gene_readout, hits)
                 self.process_completion(critique_prompt, self.gene_sampled, curr_sample, log_file)
 
-    def generate_critique_prompt(self, curr_sample, hits):
+    def generate_critique_prompt(self, curr_sample, gene_readout, hits):
         prompt_c = f"""You are a scientist working on problems in drug discovery.
 Research Problem: {self.research_problem}
 """
         if hits is not None:
             prompt_c += (
-                f"\n All tested genes so far and their measured log fold change are: \n{self.ground_truth.drop(hits).to_string()}"
+                f"\n All tested genes so far and their measured log fold change are: \n{gene_readout.drop(hits).to_string()}"
                 f"\n The results for the hits are: \n{self.ground_truth.loc[hits].to_string()}"
             )
         prompt_c += (
