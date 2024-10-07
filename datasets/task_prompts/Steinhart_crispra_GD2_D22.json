@@ -1,0 +1,1 @@
+{"Task": "identify genes that upon activation allow cells to resist T-cell exhaustion, under the HA GD2 CAR (chimeric-antigenic receptor) condition", "Measurement": "the log fold change in normalized sgRNA read counts compared to the non-targeting control, 22 days after perturbation"}

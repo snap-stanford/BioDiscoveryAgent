@@ -20,15 +20,28 @@ for more information
 
 1. IFNG
 2. IL2
-3. Carnevale
-4. Scharenberg
+3. Carnevale22_Adenosine
+4. Scharenberg22
+5. Sanchez21_down
    
 ## Commands
 
-To run BioDiscoveryAgent with all tools on the IFNG dataset:
+Python 3 is required to run the scripts (3.10 recommended). To run the baseform BioDiscoveryAgent with Claude-3.5-Sonnet on the IFNG dataset:
 
 ```
-python research_assistant.py  --task perturb-genes-brief --model claude-1 --run_name test --data_name IFNG --steps 5 --num_genes 128 --log_dir v1
+python research_assistant.py  --task perturb-genes-brief --model claude-3-5-sonnet-20240620 --run_name test --data_name IFNG --steps 5 --num_genes 128 --log_dir sonnet
+```
+To run the agent with all tools:
+```
+python research_assistant.py  --task perturb-genes-brief --model claude-3-5-sonnet-20240620 --run_name test --data_name IFNG --steps 5 --num_genes 128 --log_dir sonnet --lit_review True --critique True --reactome True
+```
+You can also similarly run with OpenAI models:
+```
+python research_assistant.py  --task perturb-genes-brief --model gpt-4o --run_name test --data_name IFNG --steps 5 --num_genes 128 --log_dir v1
+```
+To calculate hit rate on the predictions:
+```
+python analyze.py  --model sonnet --dataset IFNG --trials 1 --rounds 5
 ```
 
 
