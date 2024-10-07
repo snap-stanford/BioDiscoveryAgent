@@ -102,7 +102,7 @@ Here is a detailed description on what to look for and what should returned: {th
 The description should short and also reference crtical lines in the script relevant to what is being looked for. Only describe what is objectively confirmed by the file content. Do not include guessed numbers. If you cannot find the answer to certain parts of the request, you should say "In this segment, I cannot find ...".
 """
 
-        completion = complete_text_claude(prompt, model = model, log_file=None)
+        completion = complete_text(prompt, model = model, log_file=None)
         descriptions.append(completion)
     if len(descriptions) == 1:
         return descriptions[0]

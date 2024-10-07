@@ -51,6 +51,48 @@ Do not include any genes from this prompt (since they're already tested).
 
 """
 
+initial_prompt_topk = """You are a scientist working on problems in drug discovery.
+
+Research Problem: {research_problem}
+
+Always respond in this format exactly:
+
+1. Reflection: Thoughts on previous results and next steps. 
+2. Research Plan: The full high level research plan, with current status and reasoning behind each proposed approach. It should be at most 5 sentences.
+3. Correlated Genes: Name a gene to search for 10 most correlated genes based on Pearson's correlation. Only include the gene name itself after "2. Correlated Genes:".
+4. Solution: Propose a list of predicted genes to test separated by commas in this format: 1. <Gene name 1>, 2. <Gene name 2> ...
+Do not include any genes from this prompt (since they're already tested).
+
+"""
+
+initial_prompt_rna = """You are a scientist working on problems in drug discovery.
+
+Research Problem: {research_problem}
+
+Always respond in this format exactly:
+
+1. Reflection: Thoughts on previous results and next steps. 
+2. Research Plan: The full high level research plan, with current status and reasoning behind each proposed approach. It should be at most 5 sentences.
+3. Active Tissues: Name a gene to search for the top 10 tissues where this gene is active, based on transcripts per million. Only include the gene name itself after "2. Active Tissues:".
+4. Solution: Propose a list of predicted genes to test separated by commas in this format: 1. <Gene name 1>, 2. <Gene name 2> ...
+Do not include any genes from this prompt (since they're already tested).
+
+"""
+
+initial_prompt_pathways = """You are a scientist working on problems in drug discovery.
+
+Research Problem: {research_problem}
+
+Always respond in this format exactly:
+
+1. Reflection: Thoughts on previous results and next steps. 
+2. Research Plan: The full high level research plan, with current status and reasoning behind each proposed approach. It should be at most 5 sentences.
+3. Reactome Pathways: Name a gene to search for the associated biological pathways. Only include the gene name itself after "2. Reactome Pathways:".
+4. Solution: Propose a list of predicted genes to test separated by commas in this format: 1. <Gene name 1>, 2. <Gene name 2> ...
+Do not include any genes from this prompt (since they're already tested).
+
+"""
+
 ## Combination task: Horlbeck
 initial_prompt_pairs = """You are a scientist working on problems in drug discovery.
 
@@ -91,6 +133,11 @@ if __name__ == "__main__":
     parser.add_argument("--gene_search", type=bool, default=False, help="gene search")
     parser.add_argument("--gene_search_diverse", type=bool, default=False, help="gene search using diversity mode instead of similarity mode")
     parser.add_argument("--lit_review", type=bool, default=False, help="perform literature review")
+    parser.add_argument("--topk", type=bool, default=False, help="top k correlated gene search")
+    parser.add_argument("--rna", type=bool, default=False, help="top tpm RNA-seq")
+    parser.add_argument("--pathways", type=bool, default=False, help="pathway search")
+    parser.add_argument("--enrichment", type=bool, default=False, help="enrichment analysis")
+    parser.add_argument("--reactome", type=bool, default=False, help="enrichment on Reactome")
     parser.add_argument("--combinatorial", type=bool, default=False, help="combinatorial")
     
     args = parser.parse_args()
@@ -109,6 +156,25 @@ if __name__ == "__main__":
                             task_description,  args.num_genes, measurement)
 
         benchmark_name = "perturb-genes"
+
+        instructions = "\n Based on these results and " \
+                           "prior knowledge of biology, make the best " \
+                       "possible prediction of the " \
+                           "first {} genes that I should test to maximize " \
+                           "the score. Use HGNC gene naming convention." \
+                           "DO NOT PREDICT GENES THAT HAVE ALREADY BEEN TESTED"\
+                           "".format(args.num_genes)
+
+    elif args.task == "perturb-genes-brief":
+        research_problem = "I'm planning to run a genome-wide CRISPR screen " \
+                           "to {}. There are 18,939 possible  genes to perturb and I can only " \
+                           "perturb {} genes at a time. For each " \
+                           "perturbation, I'm able to measure out {} which " \
+                           "will be referred to as the score. I can " \
+                           "only do a few rounds of experimentation.".format(
+                            task_description,  args.num_genes, measurement)
+
+        benchmark_name = "perturb-genes-brief"
 
         instructions = "\n Based on these results and " \
                            "prior knowledge of biology, make the best " \
@@ -146,6 +212,12 @@ if __name__ == "__main__":
     
     if args.gene_search:   
         initial_prompt = initial_prompt_gene_search
+    if args.topk:
+        initial_prompt = initial_prompt_topk
+    if args.rna:
+        initial_prompt = initial_prompt_rna
+    if args.pathways:
+        initial_prompt = initial_prompt_pathways
     if args.combinatorial:
         initial_prompt = initial_prompt_pairs
             

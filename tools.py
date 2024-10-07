@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from get_lit_review import get_lit_review
+from gene import *
 
 
 class GenePerturbAgent(object):
@@ -94,6 +95,22 @@ class GenePerturbAgent(object):
         self.lit_review_summary += get_lit_review(str(lit_review_prompt),
                                                   model=self.args.model,
                                                   max_number=4)
+    
+    def perform_enrichment(hits, gene_sampled):
+        pathways = get_enrichment_KEGG_pathways(hits)
+        candidates = get_topk_genes_in_pathways(pathways, gene_sampled)
+        result = "\n".join(candidates)
+        prompt += f"\n You have done enrichment analysis on previous hits. The genes provided have been identified as the most frequently occurring across multiple pathways in KEGG analysis. These pathways span various biological processes and maybe linked to different diseases or cellular function. \n {result}"
+
+    def perform_reactome(hits, gene_sampled):
+        pathways = get_enrichment(hits, database="Reactome_2022")
+        path_ids = []
+        for path in pathways:
+            path_ids.append(path.split()[-1])
+        candidates = get_topk_genes_in_reactome(path_ids, gene_sampled)
+        result = "\n".join(candidates)
+        prompt += f"\n You have done enrichment analysis on previous hits. The names provided have been identified as the candidates for most frequently occurring genes across multiple pathways in Reactome pathway analysis. These pathways span various biological processes and maybe linked to different diseases or cellular function. \n {result}"
+
 
     def save_sampled_genes(self, gene_sampled, curr_sample):
         all_sampled_so_far = gene_sampled + curr_sample[:self.args.num_genes]
@@ -121,6 +138,32 @@ class GenePerturbAgent(object):
                     completion_post = complete_text(
                         prompt_try + completion_pre + "\n\n3. Solution:",
                         model=self.args.model, log_file=log_file)
+                    completion = completion_pre + "\n\n4. Solution:" + completion_post
+                if "Correlated Genes:" in completion:
+                    completion_pre = completion.split("4. Solution:")[0] 
+                    # execute action gene search
+                    completion_pre = completion_pre + "Top Correlated Genes:" + get_top_k_correlated_genes(completion_pre.split("Correlated Genes:")[1].strip())
+                    
+                    
+                    completion_post = complete_text(prompt_try + anthropic.AI_PROMPT +  completion_pre + "\n\n3. Solution:", model = args.model, ai_prompt = "", log_file=log_file)
+                    completion = completion_pre + "\n\n4. Solution:" + completion_post
+
+                if "Active Tissues:" in completion:
+                    completion_pre = completion.split("4. Solution:")[0] 
+                    # execute action gene search
+                    completion_pre = completion_pre + "Active Tissues:" + get_rna_seq(completion_pre.split("Active Tissues:")[1].strip())
+                    
+                    
+                    completion_post = complete_text(prompt_try + anthropic.AI_PROMPT +  completion_pre + "\n\n3. Solution:", model = args.model, ai_prompt = "", log_file=log_file)
+                    completion = completion_pre + "\n\n4. Solution:" + completion_post
+
+                if "Reactome Pathways:" in completion:
+                    completion_pre = completion.split("4. Solution:")[0] 
+                    # execute action gene search
+                    completion_pre = completion_pre + "Reactome Pathways:" + get_gene_to_reactome_pathways(completion_pre.split("Reactome Pathways:")[1].strip())
+                    
+                    
+                    completion_post = complete_text(prompt_try + anthropic.AI_PROMPT +  completion_pre + "\n\n3. Solution:", model = args.model, ai_prompt = "", log_file=log_file)
                     completion = completion_pre + "\n\n4. Solution:" + completion_post
 
             try:
@@ -203,6 +246,10 @@ class GenePerturbAgent(object):
 
             if self.curr_step < 5 and self.args.lit_review:
                 self.perform_lit_review(prompt.split("Always respond")[0])
+            
+            if curr_step > 0 and args.enrichment:
+                pass
+
             self.process_completion(prompt, self.gene_sampled, curr_sample,
                                     log_file)
 
