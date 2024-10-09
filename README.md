@@ -57,8 +57,8 @@ Please cite our [preprint](http://arxiv.org/abs/2405.17631) if you use this code
 ```
 @article{roohani2024,
   title={BioDiscoveryAgent: An AI Agent for Designing Genetic Perturbation Experiments},
-  author={Roohani, Yusuf and Vora, Jian and Huang, Qian and Steinhart, 
-  Zachary and Marson, Alexander, Liang, Percy and Leskovec, Jure},
+  author={Roohani, Yusuf and Lee, Andrew and Huang, Qian and Vora, Jian and Steinhart, 
+  Zachary and Huang, Kexin and Marson, Alexander, and Liang, Percy and Leskovec, Jure},
   journal={arXiv preprint},
   year={2024},
 }
