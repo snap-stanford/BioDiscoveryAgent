@@ -45,7 +45,7 @@ python research_assistant.py  --task perturb-genes-brief --model claude-3-5-sonn
 ```
 To calculate hit rate on the predictions:
 ```
-python analyze.py  --model {sonnet}_{all} --dataset IFNG --rounds 5
+python analyze.py  --model {model}_{tools} --dataset IFNG --rounds 5
 ```
 
 
