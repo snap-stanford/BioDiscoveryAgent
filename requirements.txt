@@ -1,0 +1,14 @@
+anthropic
+torch==2.0.0
+torchvision==0.15.1
+transformers==4.28.0
+Tiktoken
+numpy
+Pandas
+Arxiv
+Scholarly
+pymed
+Matplotlib
+slingpy
+langchain
+genedisco
