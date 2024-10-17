@@ -170,8 +170,8 @@ if __name__ == "__main__":
     tools.DEVICE = args.device
     tools.PYTHON = args.python
 
-    print("DEVICE:", tools.DEVICE)
-    print("PYTHON:", tools.PYTHON)
+    # print("DEVICE:", tools.DEVICE)
+    # print("PYTHON:", tools.PYTHON)
 
 
 # , 'Edit Script (Direct)''Work On Subtask',
