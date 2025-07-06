@@ -52,7 +52,7 @@ python analyze.py  --model {model}_{tools} --dataset IFNG --rounds 5
 
 ## Preprocessing your own dataset
 
-To preprocess your own dataset, please follow the instructions in the [preprocessing notebook](notebooks/Preprocessing.ipynb)
+See example shown [here](https://github.com/snap-stanford/BioDiscoveryAgent/tree/master/data) for preprocessing your own dataset, 
 
 ## Preprint
 
